@@ -60,7 +60,7 @@ func (c Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 
 	index := strings.LastIndex(r.URL.Path, "/")
 
-	data, err := ioutil.ReadFile("." + r.URL.Path[:index] + "_" + r.URL.Path[index+1:])
+	data, err := ioutil.ReadFile(r.URL.Path[:index] + "_" + r.URL.Path[index+1:])
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -92,8 +92,7 @@ func (c Controller) Single(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c Controller) uploadFile(w http.ResponseWriter, r *http.Request, params []string) {
-	// TODO: /files
-	fileName := fmt.Sprintf("./files/%s_%s", params[1], params[2])
+	fileName := fmt.Sprintf("/files/%s_%s", params[1], params[2])
 	url := fmt.Sprintf("http://localhost:8000/files/%s/%s", params[1], params[2])
 	log.Println("[UF]", fileName)
 

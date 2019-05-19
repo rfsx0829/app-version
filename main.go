@@ -24,6 +24,7 @@ func main() {
 	router.NotFoundHandler = handler(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello 404"))
 	})
+
 	router.HandleFunc("/", con.GetAllProjects)
 	router.HandleFunc("/{project}", con.GetAllVersions)
 	router.HandleFunc("/{project}/{version}", con.Single)
