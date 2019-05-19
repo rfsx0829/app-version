@@ -17,3 +17,10 @@ $ cd app-version
 $ go run main.go
 Serving on localhost:8000
 ```
+
+Features
+
+- Add item
+- Add many version for item
+- View all versions
+- Download file of any version
