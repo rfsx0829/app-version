@@ -17,7 +17,8 @@ import (
 type Controller struct{}
 
 const (
-	projs string = "_projs"
+	projs       string = "_projs"
+	uploadToken string = "password"
 )
 
 // GetAllProjects returns all projects
@@ -92,6 +93,13 @@ func (c Controller) Single(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c Controller) uploadFile(w http.ResponseWriter, r *http.Request, params []string) {
+	if r.FormValue("token") != uploadToken {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("Invalid token"))
+		log.Println("[UF]", "Invalid token")
+		return
+	}
+
 	fileName := fmt.Sprintf("/files/%s_%s", params[1], params[2])
 	url := fmt.Sprintf("http://localhost:8000/files/%s/%s", params[1], params[2])
 	log.Println("[UF]", fileName)
