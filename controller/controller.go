@@ -2,12 +2,14 @@ package controller
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/rfsx0829/app-version/redis"
@@ -75,41 +77,68 @@ func (c Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 
 // Single handle the single version of a project
 func (c Controller) Single(w http.ResponseWriter, r *http.Request) {
+	var (
+		data []byte
+		err  error
+	)
 	log.Println("[SV]", r.URL.Path)
+
 	params := strings.Split(r.URL.Path, "/")
 	if !checkParam(params) {
+		err = errors.New("Invalid params")
+	} else if strings.ToUpper(params[2]) == "LATEST" {
+		data, err = c.getLatest(w, r, params[1])
+	} else if r.Method == "POST" {
+		err = c.uploadFile(r, params)
+	} else {
+		data, err = c.getSingle(params)
+	}
+
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid Params"))
-		log.Println("[SV]", "Invalid Params")
+		w.Write([]byte(err.Error()))
+		log.Println(err)
 		return
 	}
 
-	if r.Method == "POST" {
-		c.uploadFile(w, r, params)
-		return
-	}
-
-	c.getSingle(w, r, params)
+	w.WriteHeader(http.StatusOK)
+	w.Write(data)
+	log.Println("[SV]", "OK")
 }
 
-func (c Controller) uploadFile(w http.ResponseWriter, r *http.Request, params []string) {
+func (c Controller) getLatest(w http.ResponseWriter, r *http.Request, project string) ([]byte, error) {
+	mp, err := redis.Client.HGetAll(project).Result()
+	if err != nil {
+		return nil, err
+	}
+
+	var x struct {
+		Version string `json:"version"`
+		URL     string `json:"url"`
+	}
+
+	for k, v := range mp {
+		if later(k, x.Version) {
+			x.Version = k
+			x.URL = v
+		}
+	}
+
+	return json.Marshal(x)
+}
+
+func (c Controller) uploadFile(r *http.Request, params []string) error {
 	if r.FormValue("token") != uploadToken {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("Invalid token"))
-		log.Println("[UF]", "Invalid token")
-		return
+		return errors.New("Invalid Token")
 	}
 
 	fileName := fmt.Sprintf("/files/%s_%s", params[1], params[2])
-	url := fmt.Sprintf("http://localhost:8000/files/%s/%s", params[1], params[2])
+	url := fmt.Sprintf("http://39.98.162.91:8000/files/%s/%s", params[1], params[2])
 	log.Println("[UF]", fileName)
 
 	file, _, err := r.FormFile("file")
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		log.Println("[UF]", err)
-		return
+		return err
 	}
 	defer func() {
 		file.Close()
@@ -117,33 +146,22 @@ func (c Controller) uploadFile(w http.ResponseWriter, r *http.Request, params []
 
 	f, err := os.OpenFile(fileName, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		log.Println("[UF]", err)
-		return
+		return err
 	}
 
 	if _, err = io.Copy(f, file); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		log.Println("[UF]", err)
-		return
+		return err
 	}
 
 	redis.Client.SAdd(projs, params[1])
 	if _, err := redis.Client.HSet(params[1], params[2], url).Result(); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		log.Println("[UF]", err)
-		return
+		return err
 	}
 
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Upload Success !"))
-	log.Println("[UF]", "Success !")
+	return nil
 }
 
-func (c Controller) getSingle(w http.ResponseWriter, r *http.Request, params []string) {
+func (c Controller) getSingle(params []string) ([]byte, error) {
 	var x struct {
 		Version string `json:"version"`
 		URL     string `json:"url"`
@@ -152,25 +170,13 @@ func (c Controller) getSingle(w http.ResponseWriter, r *http.Request, params []s
 
 	res, err := redis.Client.HGet(params[1], params[2]).Result()
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		log.Println("[GS]", err)
-		return
+		return nil, err
 	}
 
 	x.Version = params[2]
 	x.URL = res
 
-	data, err := json.Marshal(x)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte(err.Error()))
-		log.Println("[GS]", err)
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	w.Write(data)
+	return json.Marshal(x)
 }
 
 func checkParam(params []string) bool {
@@ -187,4 +193,47 @@ func checkParam(params []string) bool {
 	}
 
 	return true
+}
+
+func later(newer, older string) bool {
+	if len(older) == 0 {
+		return true
+	}
+
+	if len(newer) == 0 {
+		return false
+	}
+
+	var (
+		i1     = strings.LastIndex(newer, "v")
+		i2     = strings.LastIndex(older, "v")
+		s1     = strings.Split(newer[i1+1:], ".")
+		s2     = strings.Split(older[i2+1:], ".")
+		length = min(len(s1), len(s2))
+	)
+
+	for i := 0; i < length; i++ {
+		var (
+			n1, _ = strconv.Atoi(s1[i])
+			n2, _ = strconv.Atoi(s2[i])
+		)
+
+		if n1 == n2 {
+			continue
+		}
+
+		if n1 > n2 {
+			return true
+		}
+		return false
+	}
+
+	return false
+}
+
+func min(a, b int) int {
+	if a > b {
+		return b
+	}
+	return a
 }
