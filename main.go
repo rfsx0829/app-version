@@ -16,10 +16,15 @@ func (h handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	redis.InitClient("192.168.99.105", 31150, "password", 0)
+	redis.InitClient("172.17.0.5", 6379, "password", 0)
 
 	router := mux.NewRouter()
-	con := controller.Controller{}
+	con := controller.Controller{
+		Host:        "localhosts",
+		Port:        8000,
+		Projs:       "_projs",
+		UploadToken: "password",
+	}
 
 	router.NotFoundHandler = handler(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello 404"))
