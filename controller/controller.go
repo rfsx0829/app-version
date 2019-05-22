@@ -16,18 +16,18 @@ import (
 )
 
 // Controller hold methods
-type Controller struct{}
-
-const (
-	projs       string = "_projs"
-	uploadToken string = "password"
-)
+type Controller struct {
+	Host        string
+	Port        int
+	Projs       string
+	UploadToken string
+}
 
 // GetAllProjects returns all projects
 func (c Controller) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	log.Println("[AP]", r.URL.Path)
 
-	data, err := redis.GetSDataJSON(projs)
+	data, err := redis.GetSDataJSON(c.Projs)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -128,12 +128,12 @@ func (c Controller) getLatest(w http.ResponseWriter, r *http.Request, project st
 }
 
 func (c Controller) uploadFile(r *http.Request, params []string) error {
-	if r.FormValue("token") != uploadToken {
+	if r.FormValue("token") != c.UploadToken {
 		return errors.New("Invalid Token")
 	}
 
 	fileName := fmt.Sprintf("/files/%s_%s", params[1], params[2])
-	url := fmt.Sprintf("http://39.98.162.91:8000/files/%s/%s", params[1], params[2])
+	url := fmt.Sprintf("http://%s:%d/files/%s/%s", c.Host, c.Port, params[1], params[2])
 	log.Println("[UF]", fileName)
 
 	file, _, err := r.FormFile("file")
@@ -153,7 +153,7 @@ func (c Controller) uploadFile(r *http.Request, params []string) error {
 		return err
 	}
 
-	redis.Client.SAdd(projs, params[1])
+	redis.Client.SAdd(c.Projs, params[1])
 	if _, err := redis.Client.HSet(params[1], params[2], url).Result(); err != nil {
 		return err
 	}
