@@ -11,7 +11,7 @@ import (
 )
 
 // Single handle the single version of a project
-func (c Controller) Single(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Single(w http.ResponseWriter, r *http.Request) {
 	var (
 		data []byte
 		err  error
@@ -26,14 +26,14 @@ func (c Controller) Single(w http.ResponseWriter, r *http.Request) {
 		err = errors.New("Invalid params")
 
 	case strings.ToUpper(version) == "LATEST":
-		data, err = c.getLatest(project)
+		data, err = getLatest(project)
 
 	case r.Method == "POST":
 		err = c.uploadFile(r, project, version)
 		data = []byte("Upload Success !")
 
 	default:
-		data, err = c.getSingle(project, version)
+		data, err = getSingle(project, version)
 	}
 
 	if err != nil {
@@ -48,7 +48,7 @@ func (c Controller) Single(w http.ResponseWriter, r *http.Request) {
 	log.Println("[SV]", "OK")
 }
 
-func (c Controller) getLatest(project string) ([]byte, error) {
+func getLatest(project string) ([]byte, error) {
 	mp, err := redis.Client.HGetAll(project).Result()
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (c Controller) getLatest(project string) ([]byte, error) {
 	return json.Marshal(x)
 }
 
-func (c Controller) getSingle(project, version string) ([]byte, error) {
+func getSingle(project, version string) ([]byte, error) {
 	var x struct {
 		Version string `json:"version"`
 		URL     string `json:"url"`

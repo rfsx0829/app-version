@@ -11,7 +11,7 @@ import (
 	"github.com/rfsx0829/app-version/redis"
 )
 
-func (c Controller) uploadFile(r *http.Request, project, version string) error {
+func (c *Controller) uploadFile(r *http.Request, project, version string) error {
 	if r.FormValue("token") != c.UploadToken {
 		return errors.New("Invalid Token")
 	}

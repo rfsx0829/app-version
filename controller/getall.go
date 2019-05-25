@@ -9,7 +9,7 @@ import (
 )
 
 // GetAllProjects returns all projects
-func (c Controller) GetAllProjects(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 	log.Println("[AP]", r.URL.Path)
 
 	data, err := redis.GetSDataJSON(c.Projs)
@@ -25,7 +25,7 @@ func (c Controller) GetAllProjects(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetAllVersions of a project
-func (c Controller) GetAllVersions(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) GetAllVersions(w http.ResponseWriter, r *http.Request) {
 	log.Println("[AV]", r.URL.Path)
 
 	params := strings.Split(r.URL.Path, "/") // [ "", "{project}" ]

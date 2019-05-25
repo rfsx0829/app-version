@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"os"
 	"strconv"
 	"strings"
 )
@@ -12,6 +13,35 @@ type Controller struct {
 	Projs       string
 	UploadToken string
 	Root        string
+}
+
+// New create a Controller
+func New(h, p, t, r string, port int) *Controller {
+	err := createDir(r + "files")
+	if err != nil {
+		panic(err)
+	}
+
+	return &Controller{
+		Host:        h,
+		Port:        port,
+		Projs:       p,
+		UploadToken: t,
+		Root:        r,
+	}
+}
+
+func createDir(path string) error {
+	_, err := os.Stat(path)
+	if err == nil {
+		return nil
+	}
+
+	if os.IsNotExist(err) {
+		err = os.Mkdir(path, os.ModePerm)
+	}
+
+	return err
 }
 
 func checkParam(params []string) bool {

@@ -10,13 +10,13 @@ import (
 )
 
 // GetFile read and return the file of a specified version
-func (c Controller) GetFile(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 	log.Println("[GF]", r.URL.Path)
 
 	params := strings.Split(r.URL.Path, "/") // ["", "files", "{project}", "{version}"]
 	project, version := params[2], params[3]
 
-	data, err := c.getFile(project, version)
+	data, err := getFile(project, version)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(err.Error()))
@@ -28,7 +28,7 @@ func (c Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (c Controller) getFile(project, version string) ([]byte, error) {
+func getFile(project, version string) ([]byte, error) {
 	field := version + "_filepath"
 	filePath, err := redis.Client.HGet(project, field).Result()
 	if err != nil {
