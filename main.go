@@ -20,10 +20,11 @@ func main() {
 
 	router := mux.NewRouter()
 	con := controller.Controller{
-		Host:        "localhosts",
+		Host:        "localhost",
 		Port:        8000,
 		Projs:       "_projs",
-		UploadToken: "password",
+		UploadToken: "token",
+		Root:        "./",
 	}
 
 	router.NotFoundHandler = handler(func(w http.ResponseWriter, r *http.Request) {

@@ -3,6 +3,7 @@ package redis
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/go-redis/redis"
 )
@@ -26,6 +27,13 @@ func GetHDataJSON(name string) ([]byte, error) {
 	mp, err := Client.HGetAll(name).Result()
 	if err != nil {
 		return nil, err
+	}
+
+	// hide filepath
+	for k := range mp {
+		if strings.HasSuffix(k, "_filepath") {
+			delete(mp, k)
+		}
 	}
 
 	return json.Marshal(mp)
