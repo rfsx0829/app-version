@@ -26,7 +26,7 @@ func (c *Controller) uploadFile(r *http.Request, project, version string) error 
 	}()
 
 	fileName := fmt.Sprintf("%sfiles/%s_%s_%s", c.Root, project, version, header.Filename)
-	retURL := fmt.Sprintf("http://%s:%d/files/%s/%s", c.Host, c.Port, project, version)
+	retURL := fmt.Sprintf("http://%s:%d/files/%s/%s_%s", c.Host, c.Port, project, version, header.Filename)
 	log.Println("[UF]", fileName)
 
 	f, err := os.OpenFile(fileName, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, os.ModePerm)

@@ -14,7 +14,9 @@ func (c *Controller) GetFile(w http.ResponseWriter, r *http.Request) {
 	log.Println("[GF]", r.URL.Path)
 
 	params := strings.Split(r.URL.Path, "/") // ["", "files", "{project}", "{version}"]
-	project, version := params[2], params[3]
+	project := params[2]
+	index := strings.Index(params[3], "_")
+	version := params[3][:index]
 
 	data, err := getFile(project, version)
 	if err != nil {
