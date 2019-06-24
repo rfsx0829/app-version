@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rfsx0829/app-version/redis"
+	"github.com/rfsx0829/little-tools/app-version/redis"
 )
 
 func (c *Controller) uploadFile(r *http.Request, project, version string) error {

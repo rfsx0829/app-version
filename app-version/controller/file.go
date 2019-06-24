@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rfsx0829/app-version/redis"
+	"github.com/rfsx0829/little-tools/app-version/redis"
 )
 
 // GetFile read and return the file of a specified version

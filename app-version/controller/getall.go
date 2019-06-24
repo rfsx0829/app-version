@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/rfsx0829/app-version/redis"
+	"github.com/rfsx0829/little-tools/app-version/redis"
 )
 
 // GetAllProjects returns all projects
