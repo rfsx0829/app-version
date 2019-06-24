@@ -21,9 +21,7 @@ func (c *Controller) uploadFile(r *http.Request, project, version string) error 
 		return err
 	}
 
-	defer func() {
-		file.Close()
-	}()
+	defer file.Close()
 
 	fileName := fmt.Sprintf("%sfiles/%s_%s_%s", c.Root, project, version, header.Filename)
 	retURL := fmt.Sprintf("http://%s:%d/files/%s/%s_%s", c.Host, c.Port, project, version, header.Filename)
