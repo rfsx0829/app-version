@@ -1,43 +1,41 @@
 package main
 
 import (
-	"io/ioutil"
-	"mime/multipart"
-	"net/http"
-	"os"
+	"fmt"
+
+	"github.com/rfsx0829/little-tools/migration/transfer"
 )
 
-type simpleHost struct {
-	baseURL string
-	token   string
+type bed struct {
+	baseHost string
 }
 
-func (s simpleHost) base() string {
-	return s.baseURL
-}
-
-func (s simpleHost) up(file *os.File) error {
-	// url := s.base() + "/upload"
-	wter := multipart.NewWriter(nil)
-	wter.CreateFormFile("file", file.Name())
+func (b *bed) Upload(data []byte) error {
+	fmt.Println("upload", string(data))
 	return nil
 }
 
-func (s simpleHost) down(file string) ([]byte, error) {
-	url := s.base() + "/files/" + file
-	res, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
+type down struct {
+	baseHost string
+}
 
-	return ioutil.ReadAll(res.Body)
+func (d *down) BaseURL() string {
+	return d.baseHost
+}
+
+func (d *down) Download(link string) ([]byte, error) {
+	fmt.Println("download", link)
+	return nil, nil
 }
 
 func main() {
-	sh := simpleHost{
-		baseURL: "http://localhost:8000",
-		token:   "token",
+	trans, err := transfer.NewTransWithFilename("./xxx.md")
+	if err != nil {
+		panic(err)
 	}
 
-	foo(sh)
+	trans.Uploader = &bed{""}
+	trans.Downloader = &down{"jianshu.io"}
+
+	trans.Do()
 }
