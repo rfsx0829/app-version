@@ -2,12 +2,13 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"strings"
 
 	"github.com/rfsx0829/little-tools/migration/transfer"
 )
@@ -17,37 +18,23 @@ type bed struct {
 	token    string
 }
 
-func (b *bed) Upload(fileName string, data []byte) (err error) {
+func (b *bed) Upload(fileName string, data []byte) (string, error) {
 	buf := bytes.NewBufferString("")
 	bodyWriter := multipart.NewWriter(buf)
+	bodyWriter.SetBoundary("qweadqweas")
 
-	if err = bodyWriter.SetBoundary("qweadqweas"); err != nil {
-		log.Println(err)
-		return
-	}
+	bodyWriter.WriteField("token", b.token)
 
-	if err = bodyWriter.WriteField("token", b.token); err != nil {
-		log.Println(err)
-		return
+	if _, err := bodyWriter.CreateFormFile("file", fileName); err != nil {
+		return "", err
 	}
-
-	if _, err = bodyWriter.CreateFormFile("file", fileName); err != nil {
-		log.Println(err)
-		return
-	}
-
-	if _, err = buf.Write(data); err != nil {
-		log.Println(err)
-		return
-	}
+	buf.Write(data)
 
 	bodyWriter.Close()
 
-	reqReader := io.MultiReader(buf)
-	req, err := http.NewRequest("POST", b.baseHost, reqReader)
+	req, err := http.NewRequest("POST", b.baseHost, io.MultiReader(buf))
 	if err != nil {
-		log.Println(err)
-		return
+		return "", err
 	}
 
 	req.Header.Set("Connection", "close")
@@ -58,18 +45,16 @@ func (b *bed) Upload(fileName string, data []byte) (err error) {
 
 	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
-		log.Println(err)
-		return
+		return "", err
 	}
 	defer resp.Body.Close()
 
-	if data, err := ioutil.ReadAll(resp.Body); err != nil {
-		log.Println(err)
-	} else {
-		fmt.Println(string(data))
+	respData, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
 	}
 
-	return nil
+	return string(respData), nil
 }
 
 type down struct {
@@ -90,6 +75,11 @@ func (d *down) Download(link string) ([]byte, error) {
 	return ioutil.ReadAll(resp.Body)
 }
 
+type pair struct {
+	old string
+	new string
+}
+
 func main() {
 	trans, err := transfer.NewTransWithFilename("./xxx.md")
 	if err != nil {
@@ -100,5 +90,42 @@ func main() {
 	trans.Uploader = &bed{"http://localhost:8000/upload", "token"}
 	trans.Downloader = &down{"jianshu.io"}
 
-	trans.Do()
+	oldLinks := trans.FindAll()
+	pairs := make([]*pair, 0, len(oldLinks))
+
+	for _, e := range oldLinks {
+		pairs = append(pairs, &pair{
+			old: string(e),
+			new: "",
+		})
+	}
+
+	for _, e := range pairs {
+		if newLink, err := trans.Once(e.old); err != nil {
+			log.Println(err)
+		} else {
+			e.new = newLink
+		}
+	}
+
+	trans.MainText = replace(trans.MainText, pairs)
+
+	index := strings.LastIndex(trans.FileName, ".")
+	newFileName := trans.FileName[:index] + "_new" + trans.FileName[index:]
+
+	if err = ioutil.WriteFile(newFileName, trans.MainText, os.ModePerm); err != nil {
+		panic(err)
+	}
+}
+
+func replace(text []byte, pairs []*pair) []byte {
+	newStr := string(text)
+
+	for _, e := range pairs {
+		if e.new != "" {
+			newStr = strings.ReplaceAll(newStr, e.old, e.new)
+		}
+	}
+
+	return []byte(newStr)
 }
