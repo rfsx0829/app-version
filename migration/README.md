@@ -13,27 +13,30 @@
 
 ## Setup
 
-> $ cd little-tools/migration
-> $ go build -o mg .
-> $ ./mg --help
->   -cfg string
->    	[optional] config file, if this specified, other flags won't be used.
->  -down string
->    	[*] the base url that you download picture. ex: jianshu.io
->  -fk string
->    	[optional] fileKey, use default if you dont know what it mean. (default "file")
->  -if string
->    	[*] input file
->  -of string
->    	[optional] output file
->  -re string
->    	[optional] regular expression used to match link. (default "http[s?]://[\\d\\w\\./-]*\\.(jpg|png)")
->  -tk string
->    	[optional] tokenKey, use default if you dont know what it mean. (default "token")
->  -token string
->    	[optional] the token if server needed (default "token")
->  -up string
->    	[*] the url that upload picture. ex: http://localhost:8000/upload
+```bash
+$ cd little-tools/migration
+$ go build -o mg .
+$ ./mg --help
+
+  -cfg string
+   	[optional] config file, if this specified, other flags won't be used.
+ -down string
+   	[*] the base url that you download picture. ex: jianshu.io
+ -fk string
+   	[optional] fileKey, use default if you dont know what it mean. (default "file")
+ -if string
+   	[*] input file
+ -of string
+   	[optional] output file
+ -re string
+   	[optional] regular expression used to match link. (default "http[s?]://[\\d\\w\\./-]*\\.(jpg|png)")
+ -tk string
+   	[optional] tokenKey, use default if you dont know what it mean. (default "token")
+ -token string
+   	[optional] the token if server needed (default "token")
+ -up string
+   	[*] the url that upload picture. ex: http://localhost:8000/upload
+```
 
 ## Examples
 
