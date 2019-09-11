@@ -98,7 +98,7 @@ func (t *Transfer) Run() error {
 	oldLinks := t.FindLinks()
 	if len(oldLinks) == 0 {
 		log.Println("No matched pictures. --- ", t.FileName)
-		return nil
+		return t.WriteFile()
 	}
 	pairs := make([]*pair, 0, len(oldLinks))
 
