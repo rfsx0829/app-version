@@ -6,6 +6,9 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
+	"os"
+	"regexp"
+	"strings"
 )
 
 type bed struct {
@@ -17,6 +20,18 @@ type bed struct {
 
 // Upload data to uploadURL
 func (b *bed) Upload(fileName string, data []byte) (string, error) {
+	if b.checkURL() {
+		return b.upload(fileName, data)
+	}
+
+	if strings.Index(b.uploadURL, "./") != 0 || strings.Index(b.uploadURL, ".") != 0 {
+		b.uploadURL = "./" + b.uploadURL
+	}
+
+	return "", ioutil.WriteFile(b.uploadURL+fileName, data, os.ModePerm)
+}
+
+func (b *bed) upload(fileName string, data []byte) (string, error) {
 	buf := bytes.NewBufferString("")
 	bodyWriter := multipart.NewWriter(buf)
 	bodyWriter.SetBoundary("shoule be garbled ?")
@@ -53,4 +68,9 @@ func (b *bed) Upload(fileName string, data []byte) (string, error) {
 	}
 
 	return string(respData), nil
+}
+
+func (b *bed) checkURL() bool {
+	reg := regexp.MustCompile("http[s]?://\\S+")
+	return reg.MatchString(b.uploadURL)
 }
