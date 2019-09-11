@@ -129,7 +129,7 @@ func (t *Transfer) WriteFile() error {
 		t.OutFile = t.FileName[:index] + "_new" + t.FileName[index:]
 	}
 
-	return ioutil.WriteFile(t.OutFile, t.MainText, 0740)
+	return ioutil.WriteFile(t.OutFile, t.MainText, 0640)
 }
 
 func (t *Transfer) replace(pairs []*pair) {
