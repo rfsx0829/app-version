@@ -21,7 +21,7 @@ func main() {
 		tokenKey   = flag.String("tk", "token", "[optional] tokenKey, use default if you dont know what it mean.")
 		fileKey    = flag.String("fk", "file", "[optional] fileKey, use default if you dont know what it mean.")
 		token      = flag.String("token", "token", "[optional] the token if server needed")
-		uploadURL  = flag.String("up", "", "[*] the url that upload picture. ex: http://localhost:8000/upload . if you just want to save file locally, just specify a dir. ex: ./pics/ ")
+		uploadURL  = flag.String("up", "./", "[optional] the url that upload picture. ex: http://localhost:8000/upload . if you just want to save file locally, just specify a dir. ex: ./pics/ ")
 		baseURL    = flag.String("down", "", "[optional] the base url that you download picture. ex: jianshu.io . if you want to download all files, leave this empty.")
 
 		trans = transfer.NewTrans()
@@ -40,14 +40,6 @@ func main() {
 			return
 		}
 	} else {
-		if *uploadURL == "" {
-			fmt.Println("No upload URL.")
-			return
-		}
-		if *baseURL == "" {
-			fmt.Println("No base URL.")
-			return
-		}
 		if *inputFile == "" {
 			fmt.Println("No input file.")
 			return
