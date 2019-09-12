@@ -27,7 +27,7 @@ func (b *bed) Upload(fileName string, data []byte) (string, error) {
 		b.uploadURL = "./" + b.uploadURL
 	}
 
-	return "", ioutil.WriteFile(b.uploadURL+fileName, data, 0640)
+	return b.uploadURL + fileName, ioutil.WriteFile(b.uploadURL+fileName, data, 0640)
 }
 
 func (b *bed) upload(fileName string, data []byte) (string, error) {
