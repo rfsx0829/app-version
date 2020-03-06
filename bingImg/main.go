@@ -58,6 +58,7 @@ func main() {
 	http.HandleFunc("/api/v1/bingimg", func(w http.ResponseWriter, r *http.Request) {
 		log.Println("[info]", r.Method, r.URL.Path)
 		routine()
+		w.Header().Add("Access-Control-Allow-Origin", "*")
 		w.WriteHeader(http.StatusOK)
 		w.Write(temp)
 	})
